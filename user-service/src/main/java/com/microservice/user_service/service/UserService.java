@@ -3,6 +3,7 @@ package com.microservice.user_service.service;
 import com.microservice.user_service.dto.UserRequest;
 import com.microservice.user_service.dto.UserResponse;
 import com.microservice.user_service.entity.User;
+import com.microservice.user_service.exception.UserNotFoundException;
 import com.microservice.user_service.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +35,13 @@ public class UserService {
     }
 
     public Optional<UserResponse> getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(user -> modelMapper.map(user, UserResponse.class));
+        return Optional.ofNullable(userRepository.findById(id)
+                .map(user -> modelMapper.map(user, UserResponse.class))
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id)));
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
 
         user.setName(userRequest.getName());
         user.setUsername(userRequest.getUsername());
